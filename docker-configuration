@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+    tools {
+        maven "maven"
+    }
+    environment{
+        dockerhub_cred = credentials("docker-cred")
+    }
+    stages{
+        stage("code-checkout-stage"){
+            steps {
+              checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/DevopsWorking/addressbook.git']])
+            }
+        }
+        stage("build-stage"){
+            steps{
+                script{
+                sh'''
+                mvn compile
+                mvn test
+                mvn package
+                '''
+                }
+             }
+          }
+         stage("docker-build-stage"){
+             steps {
+                 sh "docker build -t shweta1097/jenkins-test:1.0 ."
+             }
+         }
+         stage("docker-list-image-stage"){
+             steps{
+                 script{
+                     sh "docker images"
+                 }
+             }
+         }
+         stage("docker-image-push-stage"){
+            steps{
+                script{
+                    //echo password, using pipe we will provide password as input to command
+                    sh "echo $dockerhub_cred_PSW | docker login -u $dockerhub_cred_USR --password-stdin"
+                    sh "docker push shweta1097/jenkins-test:1.0 "
+                }
+            }
+         }
+    }    
+}
