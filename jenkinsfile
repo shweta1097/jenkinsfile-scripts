@@ -1,0 +1,10 @@
+  pipeline {
+  agent any
+  stages {
+    stage("branch-test"){
+      steps{
+        echo"branch name is : ${env.BRANCH_NAME}"
+        }
+    }
+  }
+}
