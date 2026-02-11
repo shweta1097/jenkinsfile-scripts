@@ -1,0 +1,38 @@
+#install docker and aws cli in jenkins server
+pipeline {
+    agent any
+    tools 
+    {
+        maven "maven"
+    }
+    environment {
+        aws_credential = credentials("aws-cred")
+    }
+   stages {
+       stage ("checkout-stage") {
+           steps {
+              checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/DevopsWorking/addressbook.git']])
+           }
+        }
+        stage ("Maven-build-stage") {
+            steps {
+                sh '''
+                mvn compile
+                mvn test
+                mvn package
+                '''
+            }
+        }
+        stage ("Docker-build") {
+            steps {
+                sh "docker build -t 898499505456.dkr.ecr.us-east-2.amazonaws.com/my-ecr-repo:${BUILD_NUMBER} ."
+            }
+        }
+        stage ("ECR-push") {
+            steps {
+                sh "aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 898499505456.dkr.ecr.us-east-2.amazonaws.com"
+                sh "docker push 898499505456.dkr.ecr.us-east-2.amazonaws.com/my-ecr-repo:${BUILD_NUMBER}"
+            }
+        }
+   } 
+}
