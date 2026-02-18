@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+    options {
+      buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '30', numToKeepStr: '2')
+    }
+    environment {
+      Name = "Shweta"
+    }
+    parameters {
+      string defaultValue: 'shweta', description: 'Enter the name-value', name: 'FirstName'
+    }
+    post {
+     always {
+       echo"job completed"
+     }
+     success {
+       echo"job success"
+     }
+     failure {
+       echo"job failure"
+     }
+   }
+
+
+    stages {
+        stage("code-checkout-stage") {
+            steps {
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/DevopsWorking/addressbook.git']])
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shweta1097/jenkinsfile-scripts.git']])
+            }
+        }
+        stage("Usage of environment variable") {
+            steps {
+                echo "My name is ${env.Name}"
+            }
+        }
+        stage("parameter-stage"){
+            steps {
+                echo "my name is $params.FirstName"
+            }
+        }
+        stage("build-in-variable-stage"){
+            steps {
+                echo"job number is : ${env.BUILD_NUMBER}"
+                echo "build name is : ${env.JOB_NAME}"
+                echo "home directory is : ${env.JAVA_HOME}"
+            }
+        }
+        stage("script-stage") {
+            steps {
+                script{
+                    def age = 5
+                    def result = age*2
+                    echo "Hello my age is ${result}"
+                }
+                script{
+                    sh'''
+                    chmod +x helloworld.sh
+                    ./helloworld.sh
+                    '''
+                }
+                script{
+                    echo "Table of 5"
+                    for(int i = 1; i<=10; i++){
+                        echo "5x${i} = ${5*i}"
+                    }
+                }
+                script {
+                    def values = ['dev', 'uat', 'prod']
+                    sh 'chmod +x env.sh'
+                    for(name in values){
+                        sh "./env.sh ${name}"
+                    }
+                }
+                script {
+                    def age = 40
+                    if(age >= 18){
+                        echo"Congracts you are eligible to vote."
+                    }
+                    else {
+                        echo "Sorry you are not eligible for vote."
+                    }
+               }
+           }
+       }
+   }
+}
